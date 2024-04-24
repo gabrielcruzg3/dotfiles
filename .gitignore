@@ -1,0 +1,10 @@
+# Ignore everything
+*
+
+# Whitelist specific files or directories
+!.gitignore
+!.bashrc
+!.zshrc
+!barrier*
+!builder.sh
+!zsh-tooler.sh
