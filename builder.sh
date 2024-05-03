@@ -41,7 +41,17 @@ clear
         echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
         wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
         sudo apt update && \
-        sudo apt install google-chrome-stable -y && \
+        sudo apt install google-chrome-stable -y
+
+    sudo apt install openssh-server -y
+    sudo systemctl enable ssh
+    sudo ufw allow ssh
+    sudo apt install xrdp -y
+    #sudo nano /etc/xrdp/xrdp.ini
+    #port=3389
+    sudo ufw allow 3389/tcp
+    sudo ufw allow 3389/udp
+    curl -fsSL https://tailscale.com/install.sh | sh
     cd $HOME
     
 
@@ -71,6 +81,15 @@ clear
         $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
         sudo apt update && \
         sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+
+        sudo groupadd docker
+        sudo usermod -aG docker $USER      
+        #just in case
+        sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
+        sudo chmod g+rwx "$HOME/.docker" -R
+
+        sudo systemctl enable docker.service
+        sudo systemctl enable containerd.service
 
     cd $HOME
 
