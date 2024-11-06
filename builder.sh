@@ -146,8 +146,8 @@ clear
 # sudo nano /etc/sysctl.conf
 
 # extras
-    git clone https://github.com/linuxdabbler/debian-dialog-install-script && \
-    chmod +x dialog.sh && \
-    sudo sh ~/debian-dialog-install-script/dialog.sh   
+    #git clone https://github.com/linuxdabbler/debian-dialog-install-script && \
+    #chmod +x dialog.sh && \
+    #sudo sh ~/debian-dialog-install-script/dialog.sh   
 
     sudo sh $HOME/zsh-tooler.sh
