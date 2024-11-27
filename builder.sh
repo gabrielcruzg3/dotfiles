@@ -1,148 +1,203 @@
 #!/bin/bash
 
+LOG_FILE="$HOME/builder.log"
+STACER_URL="https://github.com/oguzhaninan/Stacer/releases/download/v1.1.0/stacer_1.1.0_amd64.deb"
+CHROME_URL="https://dl.google.com/linux/linux_signing_key.pub"
+CHROME_LIST="/etc/apt/sources.list.d/google-chrome.list"
+
 cd $HOME
 
-sudo apt update && sudo apt upgrade -y
+log_and_run() {
+    DEBIAN_FRONTEND=noninteractive
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Running: $@" | tee -a "$LOG_FILE"
+    "$@" >> "$LOG_FILE" 2>&1
+    local status=$?
 
-clear
+    if [ $status -ne 0 ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') Error executing: $@" | tee -a "$LOG_FILE"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') Check the log file for more details: $LOG_FILE" | tee -a "$LOG_FILE"
+        exit 1
+    fi
+}
 
-### tools, basic utilities, neededs
-    sudo apt install -y \
-        # everytime needed:
+usage() {
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "  --all                Run all steps"
+    echo "  --update             Update and upgrade system"
+    echo "  --install-tools      Install essential tools"
+    echo "  --install-stacer     Install Stacer"
+    echo "  --setup-flatpak      Setup Flatpak"
+    echo "  --install-apps       Install everyday applications"
+    echo "  --setup-remote       Setup remote access"
+    echo "  --install-dev-tools  Install development tools"
+    echo "  --install-docker     Install Docker"
+    echo "  --optimize-system    Apply system optimizations"
+    echo "  --install-corectrl   Install CoreCtrl"
+    echo "  --cleanup            Cleanup system"
+    echo "  --extras             Run extra steps"
+    echo "  --help               Display this help message"
+}
+
+check_root() {
+    if [ "$EUID" == 0 ]; then
+        echo "Please do not run as root"
+        exit 1
+    fi
+}
+
+update_and_upgrade() {
+    echo "Updating and upgrading system..."
+    log_and_run sudo apt update -y
+    log_and_run sudo apt upgrade -y
+}
+
+install_essential_tools() {
+    echo "Installing essential tools..."
+    log_and_run sudo apt install -y \
         git wget curl gnupg openssh-server xrdp \
-        # ubuntu desktop needed:
-        ubuntu-restricted-extras htop lsb-release ca-certificates \
-        # kde 18.04 and before needed:
-        #gnome-keyring
-### other utilities
-    # make sure flatpak and snap are installed
-    sudo apt install flatpak plasma-discover-backend-flatpak -y
-        # when running on laptop:
-    #sudo apt install tlp tlp-rdw -y
-    #   just cuz i sometimes brake apt then gotta solve it:
-    sudo apt install synaptic -y
+        htop lsb-release ca-certificates \
+        flatpak plasma-discover-backend-flatpak synaptic
 
-    # sudo add-apt-repository ppa:oguzhaninan/stacer -y && \
-    # sudo apt update && \
-    # sdstacer -y
-    cd /tmp && \
-        wget -O stacer.deb 'https://github.com/oguzhaninan/Stacer/releases/download/v1.1.0/stacer_1.1.0_amd64.deb' && \
-        sudo apt install ./stacer.deb -y && \
+    sudo apt install ubuntu-restricted-extras -y
+}
+
+install_stacer() {
+    echo "Installing Stacer..."
+    cd /tmp
+    log_and_run wget -O stacer.deb "$STACER_URL"
+    log_and_run sudo apt install ./stacer.deb -y
     cd $HOME
+}
 
-### setting up tools
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    #sudo apt install gnome-software-plugin-flatpak -y
+setup_flatpak() {
+    echo "Setting up Flatpak..."
+    log_and_run flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+}
 
-### every day to day used
-    # i use deb cuz of user data, same goes for edge
-        # flatpak install flathub com.google.Chrome
-        # flatpak install flathub com.microsoft.Edge
-    sudo snap install vlc telegram-desktop
-    flatpak install flathub com.spotify.Client com.discordapp.Discord
-    cd /tmp && \
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
-        sudo apt update && \
-        sudo apt install google-chrome-stable -y
-
-###setup remote access
-    sudo systemctl enable ssh
-    sudo ufw allow ssh
-    #sudo nano /etc/xrdp/xrdp.ini
-    #port=3389
-    sudo ufw allow 3389/tcp
-    sudo ufw allow 3389/udp
-    curl -fsSL https://tailscale.com/install.sh | sh
+install_everyday_apps() {
+    echo "Installing everyday applications..."
+    log_and_run sudo snap install vlc telegram-desktop
+    log_and_run flatpak install flathub com.spotify.Client com.discordapp.Discord
+    cd /tmp
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee "$CHROME_LIST"
+    log_and_run wget -q -O - "$CHROME_URL" | sudo apt-key add -
+    log_and_run sudo apt update
+    log_and_run sudo apt install google-chrome-stable -y
     cd $HOME
-    
+}
 
-### dev tools
-    # flatpak installed
-    # sudo snap install code --classic
-        # TODO asdf installer, shall create yet another sh to setup node, java and dotnet (for now)
-        # git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-        # ? done:
+setup_remote_access() {
+    echo "Setting up remote access..."
+    log_and_run sudo systemctl enable ssh
+    log_and_run sudo ufw allow ssh
+    log_and_run sudo ufw allow 3389/tcp
+    log_and_run sudo ufw allow 3389/udp
+    log_and_run curl -fsSL https://tailscale.com/install.sh | sh
+    cd $HOME
+}
+
+install_dev_tools() {
+    echo "Installing development tools..."
     sh $HOME/asdf.sh
-    # sudo snap install node --classic
-    flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity
-    
-    cd /tmp && \
-        wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64 && \
-        sudo apt install ./code.deb -y
-        
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt update && \
-        sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+    log_and_run flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity
+    cd /tmp
+    log_and_run wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64
+    log_and_run sudo apt install ./code.deb -y
+    cd $HOME
+}
 
-        sudo groupadd docker
-        sudo usermod -aG docker $USER      
-        #just in case
-        sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
-        sudo chmod g+rwx "$HOME/.docker" -R
+install_docker() {
+    echo "Installing Docker..."
+    log_and_run sudo mkdir -p /etc/apt/keyrings
+    log_and_run curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    log_and_run sudo apt update
+    log_and_run sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
 
-        sudo systemctl enable docker.service
-        sudo systemctl enable containerd.service
+    log_and_run sudo groupadd docker
+    log_and_run sudo usermod -aG docker $USER
+    log_and_run sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
+    log_and_run sudo chmod g+rwx "$HOME/.docker" -R
+
+    log_and_run sudo systemctl enable docker.service
+    log_and_run sudo systemctl enable containerd.service
 
     cd $HOME
+}
 
-# thats not the way to install edge anymore (deb package can be downloaded from their website) or flatpak
-# cd /tmp && curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
-# echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge-stable.list
-# echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/23.10/prod stable main" | sudo tee /etc/apt/sources.list.d/microsoft-prod-stable.list
+system_optimizations() {
+    echo "Applying system optimizations..."
+    log_and_run sudo systemctl disable apt-daily-upgrade.service
+    log_and_run sudo systemctl disable NetworkManager-wait-online.service
+    log_and_run sudo systemctl mask NetworkManager-wait-online.service
+    log_and_run sudo systemctl disable networkd-dispatcher.service
+    log_and_run sudo systemctl disable systemd-networkd.service
+}
 
-# sudo apt update && sudo apt install microsoft-edge-stable spotify-client -y
+install_corectrl() {
+    echo "Installing CoreCtrl..."
+    log_and_run sudo apt install corectrl -y
+}
 
-# otimizations
-    # this too down here be bad cuz they kinda break snap apps
-    # sudo systemctl disable snapd.service
-    # sudo systemctl disable snapd.seeded.service
-    sudo systemctl disable apt-daily-upgrade.service
+cleanup() {
+    echo "Cleaning up system..."
+    log_and_run sudo apt autoclean
+    log_and_run sudo apt autoremove -y
+}
 
-    sudo systemctl disable NetworkManager-wait-online.service
-    sudo systemctl mask NetworkManager-wait-online.service
-        
-    sudo systemctl disable networkd-dispatcher.service
-    sudo systemctl disable systemd-networkd.service
+extras() {
+    echo "Running extra steps..." | tee -a "$LOG_FILE"
+    cd $HOME
 
-    # no longer need all this steps (if cant find only by apt)
-    #sudo add-apt-repository ppa:ernstp/mesarc && \
-    #sudo apt update && \
-    # sudo echo "# Never prefer packages from the ernstp repository
-    #         Package: *
-    #         Pin: release o=LP-PPA-ernstp-mesarc
-    #         Pin-Priority: 1
+    if [ -f "./zsh-tooler.sh" ]; then
+        echo "Found zsh-tooler.sh, making it executable and running it..." | tee -a "$LOG_FILE"
+        sudo chmod +x ./zsh-tooler.sh
+        sudo sh ./zsh-tooler.sh
+    else
+        echo "Script $HOME/zsh-tooler.sh not found" | tee -a "$LOG_FILE"
+    fi
+}
 
-    #         # Allow upgrading only corectrl from LP-PPA-ernstp-mesarc
-    #         Package: corectrl
-    #         Pin: release o=LP-PPA-ernstp-mesarc
-    #         Pin-Priority: 500" > /etc/apt/preferences.d/corectrl
-    sudo apt install corectrl -y
+main() {
+    check_root
 
-### gaming aka minecraft
-# sudo add-apt-repository ppa:webupd8team/java
-# sudo add-apt-repository ppa:linuxuprising/java
-#     echo "deb http://ppa.launchpad.net/linuxuprising/java/ubuntu focal main" | tee /etc/apt/sources.list.d/linuxuprising-java.list
-#         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 73C3DB2A
-#             sudo apt update
-#                 echo oracle-java17-installer shared/accepted-oracle-license-v1-2 select true | sudo /usr/bin/debconf-set-selections
-#                     sudo apt install oracle-java17-installer --install-recommends -y
-#                         java --version
-# asdf plugin java
+    case "$1" in
+        --all)
+            update_and_upgrade
+            install_essential_tools
+            install_stacer
+            setup_flatpak
+            install_everyday_apps
+            setup_remote_access
+            install_dev_tools
+            install_docker
+            system_optimizations
+            install_corectrl
+            cleanup
+            extras
+            ;;
+        --update) update_and_upgrade ;;
+        --install-tools) install_essential_tools ;;
+        --install-stacer) install_stacer ;;
+        --setup-flatpak) setup_flatpak ;;
+        --install-apps) install_everyday_apps ;;
+        --setup-remote) setup_remote_access ;;
+        --install-dev-tools) install_dev_tools ;;
+        --install-docker) install_docker ;;
+        --optimize-system) system_optimizations ;;
+        --install-corectrl) install_corectrl ;;
+        --cleanup) cleanup ;;
+        --extras) extras ;;
+        --help) usage ;;
+        *)
+            echo "Invalid option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+}
 
-sudo apt autoclean
-sudo apt autoremove -y
-
-#vm.swappiness=60
-# sudo nano /etc/sysctl.conf
-
-# extras
-    #git clone https://github.com/linuxdabbler/debian-dialog-install-script && \
-    #chmod +x dialog.sh && \
-    #sudo sh ~/debian-dialog-install-script/dialog.sh   
-
-    sudo sh $HOME/zsh-tooler.sh
+main "$@"
