@@ -1,3 +1,5 @@
+#!/bin/bash
+
 sudo apt install zsh git -y
 
 ZSH_CUSTOM=$HOME/.oh-my-zsh/custom

@@ -60,8 +60,10 @@ clear
 ### dev tools
     # flatpak installed
     # sudo snap install code --classic
-    # asdf installer, shall create yet another sh to setup node, java and dotnet (for now)
-    git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+        # TODO asdf installer, shall create yet another sh to setup node, java and dotnet (for now)
+        # git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+        # ? done:
+    sh $HOME/asdf.sh
     # sudo snap install node --classic
     flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity
     
