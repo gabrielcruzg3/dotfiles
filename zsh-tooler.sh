@@ -33,4 +33,5 @@ cd $HOME
 git restore ./.zshrc
 
 echo "zsh-tooler.sh script completed."
+
 exit
