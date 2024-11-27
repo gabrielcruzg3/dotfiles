@@ -2,32 +2,35 @@
 
 cd $HOME
 
-sudo apt update
-sudo apt upgrade -y
+sudo apt update && sudo apt upgrade -y
 
 clear
 
 ### tools, basic utilities, neededs
-    sudo apt install git ubuntu-restricted-extras htop wget curl gnome-keyring \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release -y
-    
+    sudo apt install -y \
+        # everytime needed:
+        git wget curl gnupg openssh-server xrdp \
+        # ubuntu desktop needed:
+        ubuntu-restricted-extras htop lsb-release ca-certificates \
+        # kde 18.04 and before needed:
+        #gnome-keyring
 ### other utilities
     # make sure flatpak and snap are installed
-    sudo apt install snapd flatpak tlp tlp-rdw -y
-    # sudo apt install synaptic -y
+    sudo apt install flatpak plasma-discover-backend-flatpak -y
+        # when running on laptop:
+    #sudo apt install tlp tlp-rdw -y
+    #   just cuz i sometimes brake apt then gotta solve it:
+    sudo apt install synaptic -y
+
+    # sudo add-apt-repository ppa:oguzhaninan/stacer -y && \
+    # sudo apt update && \
+    # sdstacer -y
     cd /tmp && \
         wget -O stacer.deb 'https://github.com/oguzhaninan/Stacer/releases/download/v1.1.0/stacer_1.1.0_amd64.deb' && \
         sudo apt install ./stacer.deb -y && \
     cd $HOME
-    # sudo add-apt-repository ppa:oguzhaninan/stacer -y && \
-    # sudo apt update && \
-    # sudo apt install stacer -y
 
 ### setting up tools
-    sudo apt install plasma-discover-backend-flatpak -y
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     #sudo apt install gnome-software-plugin-flatpak -y
 
@@ -35,18 +38,17 @@ clear
     # i use deb cuz of user data, same goes for edge
         # flatpak install flathub com.google.Chrome
         # flatpak install flathub com.microsoft.Edge
-    sudo snap install vlc
-    flatpak install flathub com.spotify.Client
+    sudo snap install vlc telegram-desktop
+    flatpak install flathub com.spotify.Client com.discordapp.Discord
     cd /tmp && \
         echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
         wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
         sudo apt update && \
         sudo apt install google-chrome-stable -y
 
-    sudo apt install openssh-server -y
+###setup remote access
     sudo systemctl enable ssh
     sudo ufw allow ssh
-    sudo apt install xrdp -y
     #sudo nano /etc/xrdp/xrdp.ini
     #port=3389
     sudo ufw allow 3389/tcp
@@ -55,20 +57,13 @@ clear
     cd $HOME
     
 
-
-### communication
-    sudo snap install telegram-desktop
-    flatpak install flathub com.discordapp.Discord
-
-#
 ### dev tools
     # flatpak installed
     # sudo snap install code --classic
-    # asdf installed
+    # asdf installer, shall create yet another sh to setup node, java and dotnet (for now)
+    git clone https://github.com/asdf-vm/asdf.git ~/.asdf
     # sudo snap install node --classic
-    flatpak install flathub org.kde.kontrast
-    flatpak install flathub com.getpostman.Postman
-    flatpak install flathub io.dbeaver.DBeaverCommunity
+    flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity
     
     cd /tmp && \
         wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64 && \
@@ -126,7 +121,7 @@ clear
     #         Pin-Priority: 500" > /etc/apt/preferences.d/corectrl
     sudo apt install corectrl -y
 
-
+### gaming aka minecraft
 # sudo add-apt-repository ppa:webupd8team/java
 # sudo add-apt-repository ppa:linuxuprising/java
 #     echo "deb http://ppa.launchpad.net/linuxuprising/java/ubuntu focal main" | tee /etc/apt/sources.list.d/linuxuprising-java.list
@@ -138,9 +133,7 @@ clear
 # asdf plugin java
 
 sudo apt autoclean
-sudo apt autoremove
-
-clear
+sudo apt autoremove -y
 
 #vm.swappiness=60
 # sudo nano /etc/sysctl.conf
