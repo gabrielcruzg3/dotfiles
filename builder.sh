@@ -1,5 +1,6 @@
 #!/bin/bash
 
+DEBIAN_FRONTEND=noninteractive
 LOG_FILE="$HOME/builder.log"
 STACER_URL="https://github.com/oguzhaninan/Stacer/releases/download/v1.1.0/stacer_1.1.0_amd64.deb"
 CHROME_URL="https://dl.google.com/linux/linux_signing_key.pub"
@@ -8,7 +9,6 @@ CHROME_LIST="/etc/apt/sources.list.d/google-chrome.list"
 cd $HOME
 
 log_and_run() {
-    DEBIAN_FRONTEND=noninteractive
     echo "$(date '+%Y-%m-%d %H:%M:%S') Running: $@" | tee -a "$LOG_FILE"
     "$@" >> "$LOG_FILE" 2>&1
     local status=$?
@@ -56,8 +56,8 @@ install_essential_tools() {
     echo "Installing essential tools..."
     log_and_run sudo apt install -y \
         git wget curl gnupg openssh-server xrdp \
-        htop lsb-release ca-certificates \
-        flatpak plasma-discover-backend-flatpak synaptic
+        htop lsb-release ca-certificates synaptic \
+        snapd flatpak plasma-discover-backend-flatpak 
 
     sudo apt install ubuntu-restricted-extras -y
 }
@@ -77,8 +77,12 @@ setup_flatpak() {
 
 install_everyday_apps() {
     echo "Installing everyday applications..."
-    log_and_run sudo snap install vlc telegram-desktop
-    log_and_run flatpak install flathub com.spotify.Client com.discordapp.Discord
+    log_and_run sudo snap install vlc
+    log_and_run sudo snap install telegram-desktop
+    log_and_run sudo snap install discord
+    log_and_run sudo snap install spotify
+    log_and_run flatpak install flathub -y
+    # log_and_run flatpak install flathub com.spotify.Client com.discordapp.Discord -y
     cd /tmp
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee "$CHROME_LIST"
     log_and_run wget -q -O - "$CHROME_URL" | sudo apt-key add -
@@ -100,7 +104,7 @@ setup_remote_access() {
 install_dev_tools() {
     echo "Installing development tools..."
     sh $HOME/asdf.sh
-    log_and_run flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity
+    log_and_run flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity -y
     cd /tmp
     log_and_run wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64
     log_and_run sudo apt install ./code.deb -y
@@ -168,7 +172,7 @@ main() {
         --all)
             update_and_upgrade
             install_essential_tools
-            install_stacer
+            # install_stacer
             setup_flatpak
             install_everyday_apps
             setup_remote_access
