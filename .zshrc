@@ -105,3 +105,7 @@ alias zshconfig="nano ~/.zshrc"
 alias bashconfig="nano ~/.bashrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 . $HOME/.asdf/asdf.sh
+
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
