@@ -73,6 +73,7 @@ install_stacer() {
 setup_flatpak() {
     echo "Setting up Flatpak..."
     log_and_run flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    log_and_run flatpak install flathub
 }
 
 install_everyday_apps() {
@@ -81,8 +82,8 @@ install_everyday_apps() {
     log_and_run sudo snap install telegram-desktop
     log_and_run sudo snap install discord
     log_and_run sudo snap install spotify
-    log_and_run flatpak install flathub -y
-    # log_and_run flatpak install flathub com.spotify.Client com.discordapp.Discord -y
+    log_and_run flatpak install com.microsoft.Edge -y
+    # log_and_run flatpak install com.spotify.Client com.discordapp.Discord -y
     cd /tmp
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee "$CHROME_LIST"
     log_and_run wget -q -O - "$CHROME_URL" | sudo apt-key add -
@@ -104,7 +105,8 @@ setup_remote_access() {
 install_dev_tools() {
     echo "Installing development tools..."
     sh $HOME/asdf.sh
-    log_and_run flatpak install flathub org.kde.kontrast com.getpostman.Postman io.dbeaver.DBeaverCommunity -y
+    log_and_run flatpak install org.kde.kontrast io.dbeaver.DBeaverCommunity -y
+    log_and_run sudo snap install postman
     cd /tmp
     log_and_run wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64
     log_and_run sudo apt install ./code.deb -y
@@ -114,17 +116,17 @@ install_dev_tools() {
 install_docker() {
     echo "Installing Docker..."
     log_and_run sudo mkdir -p /etc/apt/keyrings
-    log_and_run curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     echo \
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     log_and_run sudo apt update
     log_and_run sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
 
-    log_and_run sudo groupadd docker
-    log_and_run sudo usermod -aG docker $USER
-    log_and_run sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
-    log_and_run sudo chmod g+rwx "$HOME/.docker" -R
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
+    sudo chown "$USER":"$USER" /home/"$USER"/.docker -R
+    sudo chmod g+rwx "$HOME/.docker" -R
 
     log_and_run sudo systemctl enable docker.service
     log_and_run sudo systemctl enable containerd.service
