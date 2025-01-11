@@ -105,6 +105,8 @@ setup_remote_access() {
 install_dev_tools() {
     echo "Installing development tools..."
     sh $HOME/asdf.sh
+    log_and_run dotnet tool install -g git-credential-manager
+    log_and_run git-credential-manager configure
     log_and_run flatpak install org.kde.kontrast io.dbeaver.DBeaverCommunity -y
     log_and_run sudo snap install postman
     cd /tmp
