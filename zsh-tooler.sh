@@ -21,7 +21,7 @@ sudo rm -rf $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
 sudo rm -rf $ZSH_CUSTOM/plugins/zsh-autosuggestions
 
 echo "Cloning zsh-syntax-highlighting plugin..."
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 echo "Cloning zsh-autosuggestions plugin..."
 git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
 
@@ -30,8 +30,11 @@ chsh -s $(which zsh)
 
 echo "Restoring .zshrc..."
 cd $HOME
-git restore ./.zshrc
+
+git restore ~/.zshrc
 
 echo "zsh-tooler.sh script completed."
+
+zsh -c "source ~/.zshrc"
 
 exit
